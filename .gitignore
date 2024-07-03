@@ -1,84 +1,76 @@
-import time
 from selenium import webdriver
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from chromedriver_autoinstaller import install
-import base64
+import time
 
-# Install chromedriver if not already installed
-install()
+# Replace with the path to your ChromeDriver
+driver_path = '/path/to/chromedriver'
+driver = webdriver.Chrome(executable_path=driver_path)
 
-# Setup chrome options
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument("--start-maximized")
-chrome_options.add_argument("--enable-logging")
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--remote-debugging-port=9222")
-chrome_options.add_argument("--disable-infobars")
-chrome_options.add_argument("--disable-extensions")
-chrome_options.add_argument("--disable-notifications")
-chrome_options.add_argument("--disable-popup-blocking")
-chrome_options.add_argument("--disable-save-password-bubble")
-chrome_options.add_argument("--disable-translate")
-chrome_options.add_argument("--disable-web-security")
-chrome_options.add_argument("--disable-webgl")
-chrome_options.add_argument("--disable-xss-auditor")
-chrome_options.add_argument("--disable-software-rasterizer")
+# Open your WooCommerce site
+driver.get('https://cosmcare.com')
 
-# Initialize the Chrome webdriver
-driver = webdriver.Chrome(options=chrome_options)
+# Add a product to the cart
+product_page_url = 'https://cosmcare.com/product-page'
+driver.get(product_page_url)
 
-def add_to_cart():
-    driver.get("https://cosmcare.com/")
-    time.sleep(1)
-    driver.execute_script("window.scrollBy(0,500)", "")
-    time.sleep(1)
-    wait = WebDriverWait(driver, 10)
-    button = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@id=\"qty-num\"]/div/form/button")))
-    button.click()
-    time.sleep(3)
-    button = wait.until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[3]/div/div/div[4]/div[2]/a[2]")))
-    button.click()
-    time.sleep(3)
-    driver.find_element(By.XPATH, "//*[@id=\"billing_email\"]").send_keys("ansh@moretasks.com")
-    time.sleep(1)
-    driver.find_element(By.XPATH, "//*[@id=\"billing_first_name\"]").send_keys("Ansh")
-    time.sleep(1)
-    driver.find_element(By.XPATH, "//*[@id=\"billing_last_name\"]").send_keys("bhatia")
-    time.sleep(1)
-    driver.find_element(By.XPATH, "//*[@id=\"billing_phone\"]").send_keys("87654345678")
-    time.sleep(1)
-    driver.find_element(By.XPATH, "//*[@id=\"billing_address_1\"]").send_keys("Near Watertank")
-    time.sleep(1)
-    driver.find_element(By.XPATH, "//*[@id=\"billing_city\"]").send_keys("Delhi")
-    time.sleep(1)
-    driver.find_element(By.XPATH, "//*[@id=\"billing_postcode\"]").send_keys("12202")
-    time.sleep(1)
-    driver.find_element(By.ID, "place_order").click()
-    time.sleep(3)
-    print("Order placed successfully")
-    driver.quit()
+# Wait for the add to cart button to be clickable and then click it
+add_to_cart_button = WebDriverWait(driver, 10).until(
+    EC.element_to_be_clickable((By.CSS_SELECTOR, 'button.single_add_to_cart_button'))
+)
+add_to_cart_button.click()
 
-add_to_cart()
+# Go to the cart page
+cart_page_url = 'https://cosmcare.com/cart'
+driver.get(cart_page_url)
 
-# Export chrome recording as webm file
-time.sleep(5)  # Wait for the recording to complete
-try:
-    base64_data = driver.execute_cdp_cmd("Page.stopScreencast", {})
-except Exception as e:
-    print(f"Error occurred while stopping screencast: {e}")
-    base64_data = None
+# Proceed to checkout
+checkout_button = WebDriverWait(driver, 10).until(
+    EC.element_to_be_clickable((By.CSS_SELECTOR, 'a.checkout-button'))
+)
+checkout_button.click()
 
-time.sleep(2)
+# Fill in the checkout form
+first_name = driver.find_element(By.ID, 'billing_first_name')
+first_name.send_keys('John')
 
-if base64_data:
-    with open("/Users/ansh/flask-auth/recording.webm", "wb") as f:
-        f.write(base64.b64decode(base64_data))
-else:
-    print("No data received from screencast")
+last_name = driver.find_element(By.ID, 'billing_last_name')
+last_name.send_keys('Doe')
 
-# Close the Chrome webdriver
+address = driver.find_element(By.ID, 'billing_address_1')
+address.send_keys('123 Main Street')
+
+city = driver.find_element(By.ID, 'billing_city')
+city.send_keys('Anytown')
+
+postcode = driver.find_element(By.ID, 'billing_postcode')
+postcode.send_keys('12345')
+
+phone = driver.find_element(By.ID, 'billing_phone')
+phone.send_keys('1234567890')
+
+email = driver.find_element(By.ID, 'billing_email')
+email.send_keys('john.doe@example.com')
+
+# Select a payment method (assuming you have a payment method with the ID 'payment_method_cod')
+payment_method = driver.find_element(By.ID, 'payment_method_cod')
+payment_method.click()
+
+# Place the order
+place_order_button = WebDriverWait(driver, 10).until(
+    EC.element_to_be_clickable((By.ID, 'place_order'))
+)
+place_order_button.click()
+
+# Wait for the confirmation page to load
+WebDriverWait(driver, 10).until(
+    EC.presence_of_element_located((By.CSS_SELECTOR, '.woocommerce-thankyou-order-received'))
+)
+
+print('Order placed successfully!')
+
+# Close the browser
 driver.quit()
