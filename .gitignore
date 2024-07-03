@@ -1,75 +1,84 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.buildlog/
-.history
-.svn/
+import time
+from selenium import webdriver
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from chromedriver_autoinstaller import install
+import base64
 
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
+# Install chromedriver if not already installed
+install()
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# Setup chrome options
+chrome_options = webdriver.ChromeOptions()
+chrome_options.add_argument("--start-maximized")
+chrome_options.add_argument("--enable-logging")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--remote-debugging-port=9222")
+chrome_options.add_argument("--disable-infobars")
+chrome_options.add_argument("--disable-extensions")
+chrome_options.add_argument("--disable-notifications")
+chrome_options.add_argument("--disable-popup-blocking")
+chrome_options.add_argument("--disable-save-password-bubble")
+chrome_options.add_argument("--disable-translate")
+chrome_options.add_argument("--disable-web-security")
+chrome_options.add_argument("--disable-webgl")
+chrome_options.add_argument("--disable-xss-auditor")
+chrome_options.add_argument("--disable-software-rasterizer")
 
-# Flutter/Dart/Pub related
-**/doc/api/
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-.pub-cache/
-.pub/
-build/
+# Initialize the Chrome webdriver
+driver = webdriver.Chrome(options=chrome_options)
 
-# Android related
-**/android/**/gradle-wrapper.jar
-**/android/.gradle
-**/android/captures/
-**/android/gradlew
-**/android/gradlew.bat
-**/android/local.properties
-**/android/**/GeneratedPluginRegistrant.java
+def add_to_cart():
+    driver.get("https://cosmcare.com/")
+    time.sleep(1)
+    driver.execute_script("window.scrollBy(0,500)", "")
+    time.sleep(1)
+    wait = WebDriverWait(driver, 10)
+    button = wait.until(EC.element_to_be_clickable((By.XPATH, "//*[@id=\"qty-num\"]/div/form/button")))
+    button.click()
+    time.sleep(3)
+    button = wait.until(EC.element_to_be_clickable((By.XPATH, "/html/body/div[3]/div/div/div[4]/div[2]/a[2]")))
+    button.click()
+    time.sleep(3)
+    driver.find_element(By.XPATH, "//*[@id=\"billing_email\"]").send_keys("ansh@moretasks.com")
+    time.sleep(1)
+    driver.find_element(By.XPATH, "//*[@id=\"billing_first_name\"]").send_keys("Ansh")
+    time.sleep(1)
+    driver.find_element(By.XPATH, "//*[@id=\"billing_last_name\"]").send_keys("bhatia")
+    time.sleep(1)
+    driver.find_element(By.XPATH, "//*[@id=\"billing_phone\"]").send_keys("87654345678")
+    time.sleep(1)
+    driver.find_element(By.XPATH, "//*[@id=\"billing_address_1\"]").send_keys("Near Watertank")
+    time.sleep(1)
+    driver.find_element(By.XPATH, "//*[@id=\"billing_city\"]").send_keys("Delhi")
+    time.sleep(1)
+    driver.find_element(By.XPATH, "//*[@id=\"billing_postcode\"]").send_keys("12202")
+    time.sleep(1)
+    driver.find_element(By.ID, "place_order").click()
+    time.sleep(3)
+    print("Order placed successfully")
+    driver.quit()
 
-# iOS/XCode related
-**/ios/**/*.mode1v3
-**/ios/**/*.mode2v3
-**/ios/**/*.moved-aside
-**/ios/**/*.pbxuser
-**/ios/**/*.perspectivev3
-**/ios/**/*sync/
-**/ios/**/.sconsign.dblite
-**/ios/**/.tags*
-**/ios/**/.vagrant/
-**/ios/**/DerivedData/
-**/ios/**/Icon?
-**/ios/**/Pods/
-**/ios/**/.symlinks/
-**/ios/**/profile
-**/ios/**/xcuserdata
-**/ios/.generated/
-**/ios/Flutter/App.framework
-**/ios/Flutter/Flutter.framework
-**/ios/Flutter/Flutter.podspec
-**/ios/Flutter/Generated.xcconfig
-**/ios/Flutter/ephemeral
-**/ios/Flutter/app.flx
-**/ios/Flutter/app.zip
-**/ios/Flutter/flutter_assets/
-**/ios/Flutter/flutter_export_environment.sh
-**/ios/ServiceDefinitions.json
-**/ios/Runner/GeneratedPluginRegistrant.*
+add_to_cart()
 
-# Exceptions to above rules.
-!**/ios/**/default.mode1v3
-!**/ios/**/default.mode2v3
-!**/ios/**/default.pbxuser
-!**/ios/**/default.perspectivev3
+# Export chrome recording as webm file
+time.sleep(5)  # Wait for the recording to complete
+try:
+    base64_data = driver.execute_cdp_cmd("Page.stopScreencast", {})
+except Exception as e:
+    print(f"Error occurred while stopping screencast: {e}")
+    base64_data = None
+
+time.sleep(2)
+
+if base64_data:
+    with open("/Users/ansh/flask-auth/recording.webm", "wb") as f:
+        f.write(base64.b64decode(base64_data))
+else:
+    print("No data received from screencast")
+
+# Close the Chrome webdriver
+driver.quit()
